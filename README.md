@@ -53,10 +53,15 @@ A breakdown of each variable is provided in the [Available Parameters](#availabl
 
 The ExecStart line in the example specifies the following:
     - `-b snapshots` - The bucket name is "snapshots"
-    - `e "https://eu2.contabostorage.com/"` - The S3 storage URL endpoint to upload to is "https://eu2.contabostorage.com/"
-    - `i "abcdefghijklmnopqrstuv1234567890"` - The ID of the account that is being used for storage is "abcdefghijklmnopqrstuv1234567890"
-    - `n kujira` - The folder name to upload to is "kujira"
-    - `d kujira` - The daemon folder is ".kujira". The "." is not needed. This is usually in the user's home directory (/home/user/.kujira)
+
+    - `-e "https://eu2.contabostorage.com/"` - The S3 storage URL endpoint to upload to is "https://eu2.contabostorage.com/"
+
+    - `-i "abcdefghijklmnopqrstuv1234567890"` - The ID of the account that is being used for storage is "abcdefghijklmnopqrstuv1234567890"
+
+    - `-n kujira` - The folder name to upload to is "kujira"
+
+    - `-d kujira` - The daemon folder is ".kujira". The "." is not needed. This is usually in the user's home directory (/home/user/.kujira)
+
     - `-u /home/relyte` - The user's home directory that runs the cosmovisor service is "/home/relyte"
 
 After this, edit the desired runtime in the `snapshot.timer` by modifying the `OnCalendar=` line. The default is to run once every 24 hours at midnight system time.
