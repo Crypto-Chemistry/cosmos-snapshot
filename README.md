@@ -23,11 +23,15 @@ cd cosmos-snapshot
 
 Move the `snapshot.service.j2` file to `snapshot.service`:
 
-`mv snapshot.service.j2 snapshot.service`
+```
+mv snapshot.service.j2 snapshot.service
+```
 
 Edit the `snapshot.service` file and replace the variables for the intended usage:
 
-`nano snapshot.service`
+```
+nano snapshot.service
+```
 
 An example completed `snapshot.service` file is provided below:
 
@@ -68,7 +72,9 @@ After this, edit the desired runtime in the `snapshot.timer` by modifying the `O
 
 Make sure the script is executable:
 
-`chmod +x snapshot.sh`
+```
+chmod +x snapshot.sh
+```
 
 Symlink the systemd files to the systemd directory:
 ```
@@ -86,11 +92,15 @@ sudo systemctl enable snapshot.timer
 
 To test the setup, simply run:
 
-`sudo systemctl start snapshot.service`
+```
+sudo systemctl start snapshot.service
+```
 
 The results can be viewed by monitoring the service:
 
-`sudo journalctl -f -u snapshot.service`
+```
+sudo journalctl -f -u snapshot.service
+```
 
 ### Available Parameters
 
