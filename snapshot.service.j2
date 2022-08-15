@@ -1,0 +1,15 @@
+[Unit]
+Description=Snapshot Upload Service
+
+[Service]
+Type=simple
+ExecStart={{ user_dir }}/cosmos-snapshot/snapshot.sh \
+            -b {{ s3_bucket_name }} \
+            -e "{{ s3_endpoint }}" \
+            -i "{{ s3_tenant_id }}" \
+            -n {{ chain_name }} \
+            -d {{ daemon_dir }} \
+            -u "{{ user_dir }}"
+
+[Install]
+WantedBy=default.target
