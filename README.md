@@ -78,8 +78,8 @@ chmod +x snapshot.sh
 
 Symlink the systemd files to the systemd directory:
 ```
-ln -s /etc/systemd/system/snapshot.service snapshot.service
-ln -s /etc/systemd/system/snapshot.timer snapshot.timer
+ln -s snapshot.service /etc/systemd/system/snapshot.service
+ln -s snapshot.timer /etc/systemd/system/snapshot.timer
 ```
 
 Enable the timer and service
