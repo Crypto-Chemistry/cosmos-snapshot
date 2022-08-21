@@ -82,7 +82,7 @@ systemctl stop cosmovisor.service
 # Compress the folder
 filename=$(echo "${NETWORK}_${block_height}.tar.lz4")
 cd ${USER_DIR}/.${DAEMON}/
-tar cvf - data | lz4 > "/home/relyte/$filename"
+tar cvf - data | lz4 > "${USER_DIR}/$filename"
 
 # Restart the service
 systemctl start cosmovisor.service
