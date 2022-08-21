@@ -94,4 +94,12 @@ rm $filename
 url="${S3_ENDPOINT}/${S3_TENANT_ID}:${S3_BUCKET}/${NETWORK}%2F${filename}"
 echo "Object URL: $url"
 
+# Uploads a file "latest" to the bucket and folder with the snapshot image
+# The "latest" file contains the URL to the snapshot
+# Allows for easier access to it in scripts eg:
+# To download the latest snapshot w/o knowing the URL:
+# wget $(wget -q -O - STATIC_URL_TO_LATEST)
+echo "$url" > /tmp/latest
+aws s3 --endpoint-url="$S3_ENDPOINT" cp "/tmp/latest" "s3://${S3_BUCKET}/${NETWORK}/"
+
 exit 0
