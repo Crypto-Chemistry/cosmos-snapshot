@@ -5,7 +5,6 @@
 
 # # # # #
 # Init vars:
-# CC: If these are set via parse_args(), why do we init them here with empy values?
 NETWORK=
 S3_TENANT_ID=
 S3_ENDPOINT=
@@ -78,7 +77,7 @@ get_block_height() {
     # Service must be running to get block height:
     systemctl start cosmovisor.service >/dev/null && \
     BLOCK_HEIGHT=$(curl -s http://localhost:26657/status | jq -r .result.sync_info.latest_block_height)
-    # CC: Is it necessary to stop the service at this time?
+    # Stop the service here to avoid potential corruption:
     systemctl stop cosmovisor.service
 }
 
@@ -89,7 +88,7 @@ compress_and_ship() {
     systemctl start cosmovisor.service
 
     # Transfer the file and then remove the file
-    cd ${USER_DIR}
+    cd "${USER_DIR}"
     aws s3 --endpoint-url="${S3_ENDPOINT}" cp "${_filename}" "s3://${S3_BUCKET}/${NETWORK}/"
     rm "${_filename}"
     local _url="${S3_ENDPOINT}/${S3_TENANT_ID}:${S3_BUCKET}/${NETWORK}%2F${_filename}"
@@ -108,8 +107,7 @@ compress_and_ship() {
 # # # # #
 # Main:
 make_opts
-parse_args
+parse_args "${@}"
 get_block_height
 compress_and_ship
 exit "${?}"
-
