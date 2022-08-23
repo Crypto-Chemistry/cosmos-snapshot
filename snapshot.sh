@@ -43,7 +43,8 @@ parse_args() {
     while true; do
     case "$1" in
         -b | --bucket ) S3_BUCKET="$2"; shift 2 ;;
-        -e | --endpoint ) S3_ENDPOINT="$2"; shift 2 ;;
+        # Ensure endpoint URL does not have a single trailing '/'
+        -e | --endpoint ) S3_ENDPOINT="${2%/}"; shift 2 ;;
         -i | --id ) S3_TENANT_ID="$2"; shift 2 ;;
         -n | --network ) NETWORK="$2"; shift 2 ;;
         -d | --daemon ) DAEMON="$2"; shift 2 ;;
@@ -68,9 +69,6 @@ parse_args() {
     "
         exit 52
     fi
-
-    # Ensure endpoint URL does not have a single trailing '/'
-    S3_ENDPOINT="${S3_ENDPOINT%/}"
 }
 
 get_block_height() {
