@@ -1,8 +1,5 @@
 #!/bin/bash -e
 
-# Needs:
-# 1. A "parse_prereqs()" func that bails when lacking prereqs: e.g. aws cli, jq, cosmovisor.service
-
 # # # # #
 # Init vars:
 NETWORK=
@@ -28,15 +25,20 @@ help_menu() {
   -d, --daemon string           (Required) The folder location of the daemon data
   -u, --userdir                 (Required) The user's home directory
   -h, --help                    (Optional) Help for the Crypto Chemistry Snapshot Uploader
+
+  Requirements:
+  * aws                         https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html
+  * jq                          Use Linux package manager to install \`jq\`
+  * cosmovisor.service
 "
 }
 
 make_opts() {
     # getopt boilerplate for argument parsing
-    OPTS=$(getopt -o b:e:i:n:d:u:h --long bucket:,endpoint:,id:,network:,daemon:,userdir:,help \
+    local _OPTS=$(getopt -o b:e:i:n:d:u:h --long bucket:,endpoint:,id:,network:,daemon:,userdir:,help \
             -n 'Crypto Chemistry Snapshot Uploader' -- "$@")
     [[ $? != 0 ]] && { echo "Terminating..." >&2; exit 51; }
-    eval set -- "${OPTS}"
+    eval set -- "${_OPTS}"
 }
 
 parse_args() {
@@ -69,6 +71,21 @@ parse_args() {
     "
         exit 52
     fi
+}
+
+parse_prereqs() {
+    for _svc in "jq" "aws"; do 
+      which "$_svc" >/dev/null || { 
+        help_menu
+        printf "\n==> %s\n" "Missing package: $_svc"
+        exit 53
+      }
+    done
+    grep -q 'cosmovisor.service' <(systemctl list-unit-files) || {
+        help_menu
+        printf "\n==> %s\n" "Missing unit: cosmovisor.service"
+        exit 54
+      }
 }
 
 get_block_height() {
@@ -106,6 +123,7 @@ compress_and_ship() {
 # Main:
 make_opts
 parse_args "${@}"
+parse_prereqs
 get_block_height
 compress_and_ship
 exit "${?}"
