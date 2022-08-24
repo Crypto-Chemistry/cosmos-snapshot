@@ -25,11 +25,6 @@ help_menu() {
   -d, --daemon string           (Required) The folder location of the daemon data
   -u, --userdir                 (Required) The user's home directory
   -h, --help                    (Optional) Help for the Crypto Chemistry Snapshot Uploader
-
-  Requirements:
-  * aws                         https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html
-  * jq                          Use Linux package manager to install \`jq\`
-  * cosmovisor.service
 "
 }
 
