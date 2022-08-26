@@ -93,7 +93,8 @@ get_block_height() {
 compress_and_ship() {
     local _filename=$(echo "${NETWORK}_${BLOCK_HEIGHT}.tar.lz4")
     cd "${USER_DIR}/.${DAEMON}/"
-    tar cvf - data | lz4 > "${USER_DIR}/${_filename}"
+    printf "\n==> %s\n" "Compressing ${USER_DIR}/.${DAEMON}/data to ${NETWORK}_${BLOCK_HEIGHT}.tar.lz4"
+    tar cf - data | pv -s $(du -sb "${USER_DIR}/.${DAEMON}/data" | awk '{print $1}') | lz4 -9 > "${USER_DIR}/${_filename}"
     sleep 5
     systemctl start "${SERVICE}"
 
