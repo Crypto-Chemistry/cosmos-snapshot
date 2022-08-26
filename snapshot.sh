@@ -1,5 +1,7 @@
 #!/bin/bash -e
 
+# # # # #
+# Init vars:
 SCRIPT_NAME="$(basename $0)"
 
 # # # # #
