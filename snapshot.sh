@@ -68,8 +68,8 @@ parse_args() {
 }
 
 parse_prereqs() {
-    for _svc in "jq" "aws"; do 
-      which "$_svc" >/dev/null || { 
+    for _svc in "jq" "aws"; do
+      which "$_svc" >/dev/null || {
         help_menu
         printf "\n==> %s\n" "Missing package: $_svc"
         exit 53
@@ -94,6 +94,7 @@ compress_and_ship() {
     local _filename=$(echo "${NETWORK}_${BLOCK_HEIGHT}.tar.lz4")
     cd "${USER_DIR}/.${DAEMON}/"
     tar cvf - data | lz4 > "${USER_DIR}/${_filename}"
+    sleep 5
     systemctl start "${SERVICE}"
 
     # Transfer the file and then remove the file
