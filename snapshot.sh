@@ -1,13 +1,5 @@
 #!/bin/bash -e
 
-# # # # #
-# Init vars:
-NETWORK=
-S3_TENANT_ID=
-S3_ENDPOINT=
-S3_BUCKET=
-DAEMON=
-USER_DIR=
 SCRIPT_NAME="$(basename $0)"
 
 # # # # #
@@ -23,14 +15,15 @@ help_menu() {
   -i, --id string               (Required) The tenant ID
   -n, --network string          (Required) The cosmos-sdk network name
   -d, --daemon string           (Required) The folder location of the daemon data
-  -u, --userdir                 (Required) The user's home directory
+  -u, --userdir                 (Required) The user's home director
+  -s, --service                 (Optional) The service name that controls the chain's deamon
   -h, --help                    (Optional) Help for the Crypto Chemistry Snapshot Uploader
 "
 }
 
 make_opts() {
     # getopt boilerplate for argument parsing
-    local _OPTS=$(getopt -o b:e:i:n:d:u:h --long bucket:,endpoint:,id:,network:,daemon:,userdir:,help \
+    local _OPTS=$(getopt -o b:e:i:n:d:u:s:h --long bucket:,endpoint:,id:,network:,daemon:,userdir:,service:,help \
             -n 'Crypto Chemistry Snapshot Uploader' -- "$@")
     [[ $? != 0 ]] && { echo "Terminating..." >&2; exit 51; }
     eval set -- "${_OPTS}"
@@ -46,6 +39,7 @@ parse_args() {
         -n | --network ) NETWORK="$2"; shift 2 ;;
         -d | --daemon ) DAEMON="$2"; shift 2 ;;
         -u | --userdir ) USER_DIR="$2"; shift 2 ;;
+        -s | --service ) SERVICE="$2"; shift 2 ;;
         -h | --help ) HELP_MENU="True"; shift ;;
         -- ) shift; break ;;
         * ) break ;;
@@ -66,6 +60,9 @@ parse_args() {
     "
         exit 52
     fi
+    if [[ -z $SERVICE ]]; then
+        SERVICE="cosmovisor.service"
+    fi
 }
 
 parse_prereqs() {
@@ -76,26 +73,26 @@ parse_prereqs() {
         exit 53
       }
     done
-    grep -q 'cosmovisor.service' <(systemctl list-unit-files) || {
+    if [[ ! $(grep "${SERVICE}" <(systemctl list-unit-files)) ]]; then
         help_menu
-        printf "\n==> %s\n" "Missing unit: cosmovisor.service"
+        printf "\n==> %s\n" "Missing unit: ${SERVICE}"
         exit 54
-      }
+    fi
 }
 
 get_block_height() {
     # Service must be running to get block height:
-    systemctl start cosmovisor.service >/dev/null && \
+    systemctl start "${SERVICE}" >/dev/null && \
     BLOCK_HEIGHT=$(curl -s http://localhost:26657/status | jq -r .result.sync_info.latest_block_height)
     # Stop the service here to avoid potential corruption:
-    systemctl stop cosmovisor.service
+    systemctl stop "${SERVICE}"
 }
 
 compress_and_ship() {
     local _filename=$(echo "${NETWORK}_${BLOCK_HEIGHT}.tar.lz4")
     cd "${USER_DIR}/.${DAEMON}/"
     tar cvf - data | lz4 > "${USER_DIR}/${_filename}"
-    systemctl start cosmovisor.service
+    systemctl start "${SERVICE}"
 
     # Transfer the file and then remove the file
     cd "${USER_DIR}"
