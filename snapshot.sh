@@ -86,6 +86,10 @@ get_block_height() {
     # Service must be running to get block height:
     systemctl start "${SERVICE}" >/dev/null && \
     BLOCK_HEIGHT=$(curl -s http://localhost:26657/status | jq -r .result.sync_info.latest_block_height)
+    if [[ -z $BLOCK_HEIGHT ]]; then
+        printf "\n==> %s\n" "Unable to get block height"
+        exit 55
+    fi
     # Stop the service here to avoid potential corruption:
     systemctl stop "${SERVICE}"
 }
