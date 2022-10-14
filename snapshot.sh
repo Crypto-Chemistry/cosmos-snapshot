@@ -70,7 +70,7 @@ parse_args() {
 }
 
 parse_prereqs() {
-    for _svc in "jq" "aws"; do
+    for _svc in "jq" "aws" "pv"; do
       which "$_svc" >/dev/null || {
         help_menu
         printf "\n==> %s\n" "Missing package: $_svc"
