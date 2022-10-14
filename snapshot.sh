@@ -25,7 +25,7 @@ help_menu() {
 
 make_opts() {
     # getopt boilerplate for argument parsing
-    local _OPTS=$(getopt -o b:e:i:n:d:u:s:h --long bucket:,endpoint:,id:,network:,daemon:,userdir:,service:,help \
+    local _OPTS=$(getopt -o b:e:i:n:d:u:s:pc:h --long bucket:,endpoint:,id:,network:,daemon:,userdir:,service:,healthcheck,healthcheck_url:,help \
             -n 'Crypto Chemistry Snapshot Uploader' -- "$@")
     [[ $? != 0 ]] && { echo "Terminating..." >&2; exit 51; }
     eval set -- "${_OPTS}"
@@ -42,6 +42,8 @@ parse_args() {
         -d | --daemon ) DAEMON="$2"; shift 2 ;;
         -u | --userdir ) USER_DIR="$2"; shift 2 ;;
         -s | --service ) SERVICE="$2"; shift 2 ;;
+        -p | --healthcheck ) HEALTHCHECK="True"; shift ;;
+        -c | --healthcheck_url ) HEALTHCHECK_URL="$2"; shift 2 ;;
         -h | --help ) HELP_MENU="True"; shift ;;
         -- ) shift; break ;;
         * ) break ;;
@@ -119,6 +121,12 @@ compress_and_ship() {
     aws s3 --endpoint-url="$S3_ENDPOINT" cp "/tmp/latest" "s3://${S3_BUCKET}/${NETWORK}/"
 }
 
+healthcheck() {
+    if [[ ! -z ${HEALTHCHECK} && ! -z ${HEALTHCHECK_URL} ]]; then
+        curl -m 10 --retry 5 ${HEALTHCHECK_URL}
+    fi
+}
+
 # # # # #
 # Main:
 make_opts
@@ -126,4 +134,5 @@ parse_args "${@}"
 parse_prereqs
 get_block_height
 compress_and_ship
+healthcheck
 exit "${?}"

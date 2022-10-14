@@ -106,12 +106,14 @@ sudo journalctl -f -u snapshot.service
 
 ### Available Parameters
 
-| Parameter     | Type   | Required | Description                                     |
-|---------------|--------|----------|-------------------------------------------------|
-| -b,--bucket   | String | Yes      | S3 Bucket name                                  |
-| -e,--endpoint | String | Yes      | S3 endpoint URL                                 |
-| -i,--id       | String | Yes      | The S3 tenant ID                                |
-| -n,--network  | String | Yes      | The cosmos-sdk network name                     |
-| -d,--daemon   | String | Yes      | The folder location of the daemon data          |
-| -u,--userdir  | String | Yes      | The user's home directory                       |
-| -h,--help     | None   | No       | Help for the Crypto Chemistry Snapshot Uploader |
+| Parameter            | Type   | Required | Description                                     |
+|----------------------|--------|----------|-------------------------------------------------|
+| -b,--bucket          | String | Yes      | S3 Bucket name                                  |
+| -e,--endpoint        | String | Yes      | S3 endpoint URL                                 |
+| -i,--id              | String | Yes      | The S3 tenant ID                                |
+| -n,--network         | String | Yes      | The cosmos-sdk network name                     |
+| -d,--daemon          | String | Yes      | The folder location of the daemon data          |
+| -u,--userdir         | String | Yes      | The user's home directory                       |
+| -p,--healthcheck     | None   | No       | Enable health checks (uses ${HEALTHCHECKS_URL} if -c is not specified)|
+| -c,--healthcheck_url | String | No       | The healthchecks.io URL to send health checks   |
+| -h,--help            | None   | No       | Help for the Crypto Chemistry Snapshot Uploader |
