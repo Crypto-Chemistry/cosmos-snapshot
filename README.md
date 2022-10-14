@@ -7,9 +7,10 @@ This repo provides a simple script and systemd service setup to enable uploading
 ## Usage
 
 ### Prerequisites 
- - awscli is installed
- - jq is installed
- - Cosmovisor is being used, or the systemd service that controls the chain daemon is called "cosmovisor.service"
+ - `awscli` is installed
+ - `jq` is installed
+ - `pv` is installed
+ - Cosmovisor is being used, or the systemd service that controls the chain daemon is called `cosmovisor.service`
  - A remote S3 compatible storage account is set up
 
 **NOTE: This has only been tested using Contabo's S3 storage service at this time. Compatibility with other S3 storage providers is not guaranteed**
