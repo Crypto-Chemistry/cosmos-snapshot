@@ -1,0 +1,11 @@
+[Unit]
+Description=Snapshot Cleanup Service
+
+[Service]
+Type=simple
+User={{ user }}
+Group={{ user }}
+ExecStart={{ path_to_cleanup_script }}
+
+[Install]
+WantedBy=default.target
