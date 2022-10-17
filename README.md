@@ -122,6 +122,8 @@ sudo journalctl -f -u snapshot.service
 ## Cleanup Usage
 The cleanup script is currently only tested against Contabo's S3 Object Storage.
 
+All cleanup related scripts and services can be found in the `cleanup/` directory.
+
 The `snapshot_cleanup.sh` script needs to be edited to provide the S3 endpoint and bucket name. Additionally, all chains need to be specified as strings in the script within the `active_chains` array.
 
 This cleanup script assumes that the `latest` object is in each chain's snapshot folder. If this doesn't exist, the script will always leave 2 snapshots present at a time.
