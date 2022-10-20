@@ -14,7 +14,7 @@ active_chains=(
 for chain in ${active_chains[@]}; do
     # Find number of backups, including the `latest` object
     echo "[${chain}]"
-    object_count=$(aws s3 --endpoint-url=$S3_ENDPOINT ls "s3://${S3_BUCKET}/${chain}/" | grep -v latest | wc -l)
+    object_count=$(aws s3 --endpoint-url=$S3_ENDPOINT ls "s3://${S3_BUCKET}/${chain}/" | wc -l)
     echo "[${chain}]: Object Count $object_count"
     # Assumes a `latest` object is present. Without this file, 2 snapshots by default would be stored. 
     if [[ $object_count == 0 ]]; then
