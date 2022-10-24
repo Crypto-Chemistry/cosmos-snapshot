@@ -25,7 +25,7 @@ help_menu() {
 
 make_opts() {
     # getopt boilerplate for argument parsing
-    local _OPTS=$(getopt -o b:e:i:n:d:u:s:pc:h --long bucket:,endpoint:,id:,network:,daemon:,userdir:,service:,healthcheck,healthcheck_url:,help \
+    local _OPTS=$(getopt -o b:e:i:n:t:d:u:s:pc:h --long bucket:,endpoint:,id:,network:,net_type:,daemon:,userdir:,service:,healthcheck,healthcheck_url:,help \
             -n 'Crypto Chemistry Snapshot Uploader' -- "$@")
     [[ $? != 0 ]] && { echo "Terminating..." >&2; exit 51; }
     eval set -- "${_OPTS}"
@@ -39,6 +39,7 @@ parse_args() {
         -e | --endpoint ) S3_ENDPOINT="${2%/}"; shift 2 ;;
         -i | --id ) S3_TENANT_ID="$2"; shift 2 ;;
         -n | --network ) NETWORK="$2"; shift 2 ;;
+        -t | --net_type ) NET_TYPE="$2"; shift 2 ;;
         -d | --daemon ) DAEMON="$2"; shift 2 ;;
         -u | --userdir ) USER_DIR="$2"; shift 2 ;;
         -s | --service ) SERVICE="$2"; shift 2 ;;
@@ -97,18 +98,25 @@ get_block_height() {
 }
 
 compress_and_ship() {
-    local _filename=$(echo "${NETWORK}_${BLOCK_HEIGHT}.tar.lz4")
+    if [[ ! -z ${NET_TYPE} ]]; then
+        local _filename=$(echo "${NETWORK}_${NET_TYPE}_${BLOCK_HEIGHT}.tar.lz4")
+        local _s3_path="s3://${S3_BUCKET}/${NETWORK}_${NET_TYPE}/"
+        local _url="${S3_ENDPOINT}/${S3_TENANT_ID}:${S3_BUCKET}/${NETWORK}_${NET_TYPE}%2F${_filename}"
+    else
+        local _filename=$(echo "${NETWORK}_${BLOCK_HEIGHT}.tar.lz4")
+        local _s3_path="s3://${S3_BUCKET}/${NETWORK}/"
+        local _url="${S3_ENDPOINT}/${S3_TENANT_ID}:${S3_BUCKET}/${NETWORK}%2F${_filename}"
+    fi
     cd "${USER_DIR}/.${DAEMON}/"
-    printf "\n==> %s\n" "Compressing ${USER_DIR}/.${DAEMON}/data to ${NETWORK}_${BLOCK_HEIGHT}.tar.lz4"
+    printf "\n==> %s\n" "Compressing ${USER_DIR}/.${DAEMON}/data to ${_filename}"
     tar cf - data | pv -s $(du -sb "${USER_DIR}/.${DAEMON}/data" | awk '{print $1}') | lz4 -9 > "${USER_DIR}/${_filename}"
     sleep 5
     systemctl start "${SERVICE}"
 
     # Transfer the file and then remove the file
     cd "${USER_DIR}"
-    aws s3 --endpoint-url="${S3_ENDPOINT}" cp "${_filename}" "s3://${S3_BUCKET}/${NETWORK}/"
+    aws s3 --endpoint-url="${S3_ENDPOINT}" cp "${_filename}" "${_s3_path}"
     rm "${_filename}"
-    local _url="${S3_ENDPOINT}/${S3_TENANT_ID}:${S3_BUCKET}/${NETWORK}%2F${_filename}"
 
     printf "%s\n" "Object URL: ${_url}"
 
@@ -118,7 +126,7 @@ compress_and_ship() {
     # To download the latest snapshot w/o knowing the URL:
     # wget $(wget -q -O - STATIC_URL_TO_LATEST)
     printf "%s\n" "${_url}" > /tmp/latest
-    aws s3 --endpoint-url="$S3_ENDPOINT" cp "/tmp/latest" "s3://${S3_BUCKET}/${NETWORK}/"
+    aws s3 --endpoint-url="$S3_ENDPOINT" cp "/tmp/latest" "${_s3_path}"
 }
 
 healthcheck() {

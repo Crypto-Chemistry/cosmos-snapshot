@@ -113,6 +113,7 @@ sudo journalctl -f -u snapshot.service
 | -e,--endpoint        | String | Yes      | S3 endpoint URL                                 |
 | -i,--id              | String | Yes      | The S3 tenant ID                                |
 | -n,--network         | String | Yes      | The cosmos-sdk network name                     |
+| -t,--net_type        | String | No       | The network type (mainnet, testnet, etc.)       |
 | -d,--daemon          | String | Yes      | The folder location of the daemon data          |
 | -u,--userdir         | String | Yes      | The user's home directory                       |
 | -p,--healthcheck     | None   | No       | Enable health checks (uses ${HEALTHCHECKS_URL} if -c is not specified)|
