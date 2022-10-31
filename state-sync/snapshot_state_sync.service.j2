@@ -6,6 +6,7 @@ Type=simple
 User={{ user }}
 Group={{ user }}
 ExecStart={{ path_to_state_sync_script }}
+Environment=STATE_SYNC_HEALTHCHECK_URL={{ state_sync_healthcheck }}
 
 [Install]
 WantedBy=default.target
