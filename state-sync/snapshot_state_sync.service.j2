@@ -3,10 +3,16 @@ Description=Snapshot State-Sync Service
 
 [Service]
 Type=simple
-User={{ user }}
-Group={{ user }}
-ExecStart={{ path_to_state_sync_script }}
-Environment=STATE_SYNC_HEALTHCHECK_URL={{ state_sync_healthcheck }}
+User={{ validator_user }}
+Group={{ validator_user }}
+ExecStart={{ user_dir }}/cosmos-snapshot/state-sync/snapshot_state_sync.sh \
+	--rpc "{{ state_sync_rpc }}" \
+	--network {{ network }} \
+	--daemon {{ user_dir }}/go/bin/{{ daemon }} \
+	--userdir {{ user_dir }} \
+	--user {{ validator_user }} \
+	--service {{ state_sync_daemon_service }} \
+	--healthcheck_url {{ state_sync_healthcheck_url }}
 
 [Install]
 WantedBy=default.target
