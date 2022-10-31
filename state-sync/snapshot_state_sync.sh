@@ -16,6 +16,7 @@ help_menu() {
   -n, --network string          (Required) The cosmos-sdk network name
   -d, --daemon string           (Required) The folder location of the daemon data
   -u, --userdir                 (Required) The user's home director
+  --user                        (Required) The user that should own the tendermint data directory
   -p, --healthcheck             (Optional) Enables sending Healthcheck pings
   -c, --healthcheck_url         (Optional) Sets the Healtcheck URL to ping
   -s, --service                 (Optional) The service name that controls the chain's deamon
@@ -25,7 +26,7 @@ help_menu() {
 
 make_opts() {
     # getopt boilerplate for argument parsing
-    local _OPTS=$(getopt -o r:n:d:u:s:pc:h --long rpc:,network:,daemon:,userdir:,service:,healthcheck,healthcheck_url:,help \
+    local _OPTS=$(getopt -o r:n:d:u:s:pc:h --long rpc:,network:,daemon:,userdir:,user:,service:,healthcheck,healthcheck_url:,help \
             -n 'Crypto Chemistry Snapshot State-Sync' -- "$@")
     [[ $? != 0 ]] && { echo "Terminating..." >&2; exit 51; }
     eval set -- "${_OPTS}"
@@ -38,6 +39,7 @@ parse_args() {
         -n | --network ) NETWORK="$2"; shift 2 ;;
         -d | --daemon ) DAEMON="$2"; shift 2 ;;
         -u | --userdir ) USER_DIR="$2"; shift 2 ;;
+        --user ) USER="$2"; shift 2 ;;
         -s | --service ) SERVICE="$2"; shift 2 ;;
         -p | --healthcheck ) HEALTHCHECK="True"; shift ;;
         -c | --healthcheck_url ) STATE_SYNC_HEALTHCHECK_URL="$2"; shift 2 ;;
@@ -74,6 +76,7 @@ configure_state_sync() {
     ${DAEMON} tendermint unsafe-reset-all --home ${USER_DIR}/.${NETWORK} > /dev/null || \
     ${DAEMON} unsafe-reset-all > /dev/null || \
     (printf "\n==> %s\n" "Unable to delete chain data" && exit 51)
+    chown -R ${USER}:${USER} ${USER_DIR}/.${NETWORK}
 
 
     #Configure State Sync Settings
