@@ -34,7 +34,7 @@ make_opts() {
 parse_args() {
     while true; do
     case "$1" in
-        -r | --rpc ) RPC="$2"; shift 2 ;;
+        -r | --rpc ) RPC="${2%/}"; shift 2 ;;
         -n | --network ) NETWORK="$2"; shift 2 ;;
         -d | --daemon ) DAEMON="$2"; shift 2 ;;
         -u | --userdir ) USER_DIR="$2"; shift 2 ;;
@@ -67,7 +67,7 @@ parse_args() {
 
 configure_state_sync() {
     #Stop daemon service
-    sudo systemctl stop ${SERVICE}
+    systemctl stop ${SERVICE}
     
     #Reset data
     printf "\n==> %s\n" "Resetting ${NETWORK} chain data"
@@ -89,7 +89,7 @@ configure_state_sync() {
 
 sync_server() {
     printf "\n==> %s\n" "Starting state-sync"
-    sudo systemctl start ${SERVICE}
+    systemctl start ${SERVICE}
     sleep 5
     #Check if still syncing
     while [[ $(${DAEMON} status 2> /dev/null | jq .SyncInfo.catching_up) != "false" ]]; do
