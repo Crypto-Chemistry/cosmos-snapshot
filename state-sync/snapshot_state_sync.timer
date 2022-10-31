@@ -1,0 +1,12 @@
+[Unit]
+Description=Run Snapshot Service on Schedule
+RefuseManualStart=no
+RefuseManualStop=no
+
+[Timer]
+Persistent=true
+OnCalendar=*-*-* 06:00:00
+Unit=snapshot_state_sync.service
+
+[Install]
+WantedBy=timers.target

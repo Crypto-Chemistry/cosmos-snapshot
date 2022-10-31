@@ -1,0 +1,11 @@
+[Unit]
+Description=Snapshot State-Sync Service
+
+[Service]
+Type=simple
+User={{ user }}
+Group={{ user }}
+ExecStart={{ path_to_state_sync_script }}
+
+[Install]
+WantedBy=default.target
