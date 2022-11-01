@@ -3,8 +3,8 @@ Description=Snapshot State-Sync Service
 
 [Service]
 Type=simple
-User={{ validator_user }}
-Group={{ validator_user }}
+User=root
+Group=root
 ExecStart={{ user_dir }}/cosmos-snapshot/state-sync/snapshot_state_sync.sh \
 	--rpc "{{ state_sync_rpc }}" \
 	--network {{ network }} \
