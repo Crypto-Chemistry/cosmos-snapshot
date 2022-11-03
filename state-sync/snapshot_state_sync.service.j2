@@ -1,0 +1,19 @@
+[Unit]
+Description=Snapshot State-Sync Service
+
+[Service]
+Type=simple
+User=root
+Group=root
+ExecStart={{ user_dir }}/cosmos-snapshot/state-sync/snapshot_state_sync.sh \
+	--rpc "{{ state_sync_rpc }}" \
+	--network {{ network }} \
+	--daemon {{ user_dir }}/go/bin/{{ daemon }} \
+	--userdir {{ user_dir }} \
+	--user {{ validator_user }} \
+	--service {{ state_sync_daemon_service }} \
+	--healthcheck_url {{ state_sync_healthcheck_url }} \
+	-p
+
+[Install]
+WantedBy=default.target

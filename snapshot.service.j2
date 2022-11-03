@@ -4,12 +4,14 @@ Description=Snapshot Upload Service
 [Service]
 Type=simple
 ExecStart={{ user_dir }}/cosmos-snapshot/snapshot.sh \
-            -b {{ s3_bucket_name }} \
-            -e "{{ s3_endpoint }}" \
-            -i "{{ s3_tenant_id }}" \
-            -n {{ chain_name }} \
-            -d {{ daemon_dir }} \
-            -u "{{ user_dir }}"
+            -b {{ snapshot_s3_bucket_name }} \
+            -e "{{ snapshot_s3_endpoint }}" \
+            -i "{{ snapshot_s3_tenant_id }}" \
+            -n {{ network }} \
+            -d {{ snapshot_daemon_dir }} \
+            -u "{{ user_dir }}" \
+            --healthcheck_url "{{ snapshot_healthcheck_url }}" \
+            -p
 
 [Install]
 WantedBy=default.target
