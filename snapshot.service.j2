@@ -10,7 +10,8 @@ ExecStart={{ user_dir }}/cosmos-snapshot/snapshot.sh \
             -n {{ network }} \
             -d {{ snapshot_daemon_dir }} \
             -u "{{ user_dir }}" \
-            --healthcheck_url "{{ snapshot_healthcheck_url }}"
+            --healthcheck_url "{{ snapshot_healthcheck_url }}" \
+            -p
 
 [Install]
 WantedBy=default.target

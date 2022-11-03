@@ -108,8 +108,8 @@ disable_state_sync() {
 }
 
 healthcheck() {
-    printf "\n==> %s\n" "Sending healthcheck to ${STATE_SYNC_HEALTHCHECK_URL}"
-    if [[ ! -z ${HEALTHCHECK} && ! -z ${STATE_SYNC_STATE_SYNC_HEALTHCHECK_URL} ]]; then
+    if [[ ! -z ${HEALTHCHECK} && ! -z ${STATE_SYNC_HEALTHCHECK_URL} ]]; then
+        printf "\n==> %s\n" "Sending healthcheck to ${STATE_SYNC_HEALTHCHECK_URL}"
         curl -m 10 --retry 5 ${STATE_SYNC_HEALTHCHECK_URL}
     fi
 }

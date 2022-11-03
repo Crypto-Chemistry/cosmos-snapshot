@@ -12,7 +12,8 @@ ExecStart={{ user_dir }}/cosmos-snapshot/state-sync/snapshot_state_sync.sh \
 	--userdir {{ user_dir }} \
 	--user {{ validator_user }} \
 	--service {{ state_sync_daemon_service }} \
-	--healthcheck_url {{ state_sync_healthcheck_url }}
+	--healthcheck_url {{ state_sync_healthcheck_url }} \
+	-p
 
 [Install]
 WantedBy=default.target
