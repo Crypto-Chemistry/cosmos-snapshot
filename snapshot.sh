@@ -19,13 +19,14 @@ help_menu() {
   -d, --daemon string           (Required) The folder location of the daemon data
   -u, --userdir                 (Required) The user's home director
   -s, --service                 (Optional) The service name that controls the chain's deamon
+  -r, --rpc_port                (Optional) The RPC port of the snapshot node
   -h, --help                    (Optional) Help for the Crypto Chemistry Snapshot Uploader
 "
 }
 
 make_opts() {
     # getopt boilerplate for argument parsing
-    local _OPTS=$(getopt -o b:e:i:n:t:d:u:s:pc:h --long bucket:,endpoint:,id:,network:,net_type:,daemon:,userdir:,service:,healthcheck,healthcheck_url:,help \
+    local _OPTS=$(getopt -o b:e:i:n:t:d:u:s:r:pc:h --long bucket:,endpoint:,id:,network:,net_type:,daemon:,userdir:,service:,rpc_port:,healthcheck,healthcheck_url:,help \
             -n 'Crypto Chemistry Snapshot Uploader' -- "$@")
     [[ $? != 0 ]] && { echo "Terminating..." >&2; exit 51; }
     eval set -- "${_OPTS}"
@@ -43,6 +44,7 @@ parse_args() {
         -d | --daemon ) DAEMON="$2"; shift 2 ;;
         -u | --userdir ) USER_DIR="$2"; shift 2 ;;
         -s | --service ) SERVICE="$2"; shift 2 ;;
+        -r | --rpc_port) RPC_PORT="$2"; shift 2 ;;
         -p | --healthcheck ) HEALTHCHECK="True"; shift ;;
         -c | --healthcheck_url ) HEALTHCHECK_URL="$2"; shift 2 ;;
         -h | --help ) HELP_MENU="True"; shift ;;
@@ -68,6 +70,8 @@ parse_args() {
     if [[ -z $SERVICE ]]; then
         SERVICE="cosmovisor.service"
     fi
+    if [[ -z $RPC_PORT ]]; then
+        RPC_PORT="26657"
 }
 
 parse_prereqs() {
@@ -88,7 +92,7 @@ parse_prereqs() {
 get_block_height() {
     # Service must be running to get block height:
     systemctl start "${SERVICE}" >/dev/null && \
-    BLOCK_HEIGHT=$(curl -s http://localhost:26657/status | jq -r .result.sync_info.latest_block_height)
+    BLOCK_HEIGHT=$(curl -s http://localhost:${RPC_PORT}/status | jq -r .result.sync_info.latest_block_height)
     if [[ -z $BLOCK_HEIGHT ]]; then
         printf "\n==> %s\n" "Unable to get block height"
         exit 55
@@ -131,7 +135,7 @@ compress_and_ship() {
 
 healthcheck() {
     if [[ ! -z ${HEALTHCHECK} && ! -z ${HEALTHCHECK_URL} ]]; then
-        curl -m 10 --retry 5 ${HEALTHCHECK_URL}
+        curl -m 5 --retry 3 ${HEALTHCHECK_URL}
     fi
 }
 
