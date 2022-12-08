@@ -73,7 +73,7 @@ configure_state_sync() {
     
     #Reset data
     printf "\n==> %s\n" "Resetting ${NETWORK} chain data"
-    ${DAEMON} tendermint unsafe-reset-all --home ${USER_DIR}/.${NETWORK} > /dev/null || \
+    ${DAEMON} tendermint unsafe-reset-all --home ${USER_DIR}/.${NETWORK} --keep-addr-book > /dev/null || \
     ${DAEMON} unsafe-reset-all > /dev/null || \
     (printf "\n==> %s\n" "Unable to delete chain data" && exit 51)
     chown -R ${USER}:${USER} ${USER_DIR}/.${NETWORK}
