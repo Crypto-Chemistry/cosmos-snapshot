@@ -17,6 +17,7 @@ help_menu() {
   -d, --daemon string           (Required) The folder location of the daemon data
   -u, --userdir                 (Required) The user's home director
   --user                        (Required) The user that should own the tendermint data directory
+  --daemon_dir                  (Optional) Specifies the daemon directory (defaults to $HOME/.${NETWORK})
   -p, --healthcheck             (Optional) Enables sending Healthcheck pings
   -c, --healthcheck_url         (Optional) Sets the Healtcheck URL to ping
   -s, --service                 (Optional) The service name that controls the chain's deamon
@@ -26,7 +27,7 @@ help_menu() {
 
 make_opts() {
     # getopt boilerplate for argument parsing
-    local _OPTS=$(getopt -o r:n:d:u:s:pc:h --long rpc:,network:,daemon:,userdir:,user:,service:,healthcheck,healthcheck_url:,help \
+    local _OPTS=$(getopt -o r:n:d:u:s:pc:h --long rpc:,network:,daemon:,daemon_dir:,userdir:,user:,service:,healthcheck,healthcheck_url:,help \
             -n 'Crypto Chemistry Snapshot State-Sync' -- "$@")
     [[ $? != 0 ]] && { echo "Terminating..." >&2; exit 51; }
     eval set -- "${_OPTS}"
@@ -38,6 +39,7 @@ parse_args() {
         -r | --rpc ) RPC="${2%/}"; shift 2 ;;
         -n | --network ) NETWORK="$2"; shift 2 ;;
         -d | --daemon ) DAEMON="$2"; shift 2 ;;
+        --daemon_dir ) DAEMON_DIR="$2"; shift 2 ;;
         -u | --userdir ) USER_DIR="$2"; shift 2 ;;
         --user ) USER="$2"; shift 2 ;;
         -s | --service ) SERVICE="$2"; shift 2 ;;
@@ -65,6 +67,9 @@ parse_args() {
     if [[ -z $SERVICE ]]; then
         SERVICE="cosmovisor.service"
     fi
+    if [[ -z $DAEMON_DIR ]]; then
+        DAEMON_DIR=$NETWORK
+    fi
 }
 
 configure_state_sync() {
@@ -73,10 +78,10 @@ configure_state_sync() {
     
     #Reset data
     printf "\n==> %s\n" "Resetting ${NETWORK} chain data"
-    ${DAEMON} tendermint unsafe-reset-all --home ${USER_DIR}/.${NETWORK} --keep-addr-book > /dev/null || \
+    ${DAEMON} tendermint unsafe-reset-all --home ${USER_DIR}/.${DAEMON_DIR} --keep-addr-book > /dev/null || \
     ${DAEMON} unsafe-reset-all > /dev/null || \
     (printf "\n==> %s\n" "Unable to delete chain data" && exit 51)
-    chown -R ${USER}:${USER} ${USER_DIR}/.${NETWORK}
+    chown -R ${USER}:${USER} ${USER_DIR}/.${DAEMON_DIR}
 
 
     #Configure State Sync Settings
@@ -87,7 +92,7 @@ configure_state_sync() {
     sed -i.bak -E "s|^(enable[[:space:]]+=[[:space:]]+).*$|\1true| ; \
     s|^(rpc_servers[[:space:]]+=[[:space:]]+).*$|\1\"$RPC,$RPC\"| ; \
     s|^(trust_height[[:space:]]+=[[:space:]]+).*$|\1$BLOCK_HEIGHT| ; \
-    s|^(trust_hash[[:space:]]+=[[:space:]]+).*$|\1\"$TRUST_HASH\"|" ${USER_DIR}/.${NETWORK}/config/config.toml
+    s|^(trust_hash[[:space:]]+=[[:space:]]+).*$|\1\"$TRUST_HASH\"|" ${USER_DIR}/.${DAEMON_DIR}/config/config.toml
 }
 
 sync_server() {
@@ -103,8 +108,8 @@ sync_server() {
 }
 
 disable_state_sync() {
-    printf "\n==> %s\n" "Disabling State-Sync in ${USER_DIR}/.${NETWORK}/config/config.toml"
-    sed -i.bak -E "s|^(enable[[:space:]]+=[[:space:]]+).*$|\1false|" ${USER_DIR}/.${NETWORK}/config/config.toml
+    printf "\n==> %s\n" "Disabling State-Sync in ${USER_DIR}/.${DAEMON_DIR}/config/config.toml"
+    sed -i.bak -E "s|^(enable[[:space:]]+=[[:space:]]+).*$|\1false|" ${USER_DIR}/.${DAEMON_DIR}/config/config.toml
 }
 
 healthcheck() {

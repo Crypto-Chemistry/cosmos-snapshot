@@ -72,6 +72,7 @@ parse_args() {
     fi
     if [[ -z $RPC_PORT ]]; then
         RPC_PORT="26657"
+    fi
 }
 
 parse_prereqs() {
