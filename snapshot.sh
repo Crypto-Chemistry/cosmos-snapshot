@@ -119,7 +119,12 @@ compress_and_ship() {
 
     # Transfer the file and then remove the file
     cd "${USER_DIR}"
-    aws s3 --endpoint-url="${S3_ENDPOINT}" cp "${_filename}" "${_s3_path}"
+    retry=0
+    until [ "$retry" -ge 3 ]; do
+        aws s3 --endpoint-url="${S3_ENDPOINT}" cp "${_filename}" "${_s3_path}" && break
+        retry=$((retry+1)) 
+        sleep 15
+    done
     rm "${_filename}"
 
     printf "%s\n" "Object URL: ${_url}"
