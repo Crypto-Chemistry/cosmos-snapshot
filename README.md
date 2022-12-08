@@ -116,6 +116,8 @@ sudo journalctl -f -u snapshot.service
 | -t,--net_type        | String | No       | The network type (mainnet, testnet, etc.)       |
 | -d,--daemon          | String | Yes      | The folder location of the daemon data          |
 | -u,--userdir         | String | Yes      | The user's home directory                       |
+| -s,--service         | String | No       | The service name that controls the chain's deamon|
+| -r,--rpc_port        | Int    | No       | The RPC Port of the snapshot node (defaults to 26657)|
 | -p,--healthcheck     | None   | No       | Enable health checks (uses ${HEALTHCHECKS_URL} if -c is not specified)|
 | -c,--healthcheck_url | String | No       | The healthchecks.io URL to send health checks   |
 | -h,--help            | None   | No       | Help for the Crypto Chemistry Snapshot Uploader |
