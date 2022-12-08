@@ -114,7 +114,11 @@ compress_and_ship() {
     fi
     cd "${USER_DIR}/.${DAEMON}/"
     printf "\n==> %s\n" "Compressing ${USER_DIR}/.${DAEMON}/data to ${_filename}"
-    tar cf - data | pv -s $(du -sb "${USER_DIR}/.${DAEMON}/data" | awk '{print $1}') | lz4 -9 > "${USER_DIR}/${_filename}"
+    if [[ -d "${USER_DIR}/.${DAEMON}/wasm" ]]; then
+        tar cf - data wasm | pv -s $(du -sb "${USER_DIR}/.${DAEMON}/data" | awk '{print $1}') | lz4 -9 > "${USER_DIR}/${_filename}"
+    else
+        tar cf - data | pv -s $(du -sb "${USER_DIR}/.${DAEMON}/data" | awk '{print $1}') | lz4 -9 > "${USER_DIR}/${_filename}"
+    fi
     sleep 5
     systemctl start "${SERVICE}"
 
