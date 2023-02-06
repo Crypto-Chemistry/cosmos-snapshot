@@ -99,9 +99,11 @@ sync_server() {
     printf "\n==> %s\n" "Starting state-sync"
     systemctl start ${SERVICE}
     sleep 5
+    counter=1
     #Check if still syncing
-    while [[ $(${DAEMON} status 2> /dev/null | jq .SyncInfo.catching_up) != "false" ]]; do
-        printf "\n==> %s\n" "Node is still syncing. Sleeping for 30 seconds."
+    while [[ ($(${DAEMON} status 2> /dev/null | jq .SyncInfo.catching_up) != "false") && ($counter -lt 101) ]]; do
+        printf "\n==> %s\n" "Node is still syncing. Sleeping for 30 seconds. Attempts: ${counter}/100"
+        counter=$((counter + 1))
         sleep 30
     done
     printf "\n==> %s\n" "State Sync is complete"
