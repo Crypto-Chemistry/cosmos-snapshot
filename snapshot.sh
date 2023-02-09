@@ -72,6 +72,7 @@ parse_args() {
     fi
     if [[ -z $RPC_PORT ]]; then
         RPC_PORT="26657"
+    fi
 }
 
 parse_prereqs() {
@@ -113,13 +114,22 @@ compress_and_ship() {
     fi
     cd "${USER_DIR}/.${DAEMON}/"
     printf "\n==> %s\n" "Compressing ${USER_DIR}/.${DAEMON}/data to ${_filename}"
-    tar cf - data | pv -s $(du -sb "${USER_DIR}/.${DAEMON}/data" | awk '{print $1}') | lz4 -9 > "${USER_DIR}/${_filename}"
+    if [[ -d "${USER_DIR}/.${DAEMON}/wasm" ]]; then
+        tar cf - data wasm | pv -s $(du -sb "${USER_DIR}/.${DAEMON}/data" | awk '{print $1}') | lz4 -9 > "${USER_DIR}/${_filename}"
+    else
+        tar cf - data | pv -s $(du -sb "${USER_DIR}/.${DAEMON}/data" | awk '{print $1}') | lz4 -9 > "${USER_DIR}/${_filename}"
+    fi
     sleep 5
     systemctl start "${SERVICE}"
 
     # Transfer the file and then remove the file
     cd "${USER_DIR}"
-    aws s3 --endpoint-url="${S3_ENDPOINT}" cp "${_filename}" "${_s3_path}"
+    retry=0
+    until [ "$retry" -ge 3 ]; do
+        aws s3 --endpoint-url="${S3_ENDPOINT}" cp "${_filename}" "${_s3_path}" && break
+        retry=$((retry+1)) 
+        sleep 15
+    done
     rm "${_filename}"
 
     printf "%s\n" "Object URL: ${_url}"
