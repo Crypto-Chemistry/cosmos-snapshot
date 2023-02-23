@@ -13,6 +13,8 @@ help_menu() {
 
   Flags:
   -r, --rpc string              (Required) The RPC server to state-sync with
+  -b, --backup-rpc string       (Required) The backup RPC server to state-sync with if the primary fails
+  --rpc-port                    (Optional) The RPC port of the local node
   -n, --network string          (Required) The cosmos-sdk network name
   -d, --daemon string           (Required) The folder location of the daemon data
   -u, --userdir                 (Required) The user's home director
@@ -27,7 +29,7 @@ help_menu() {
 
 make_opts() {
     # getopt boilerplate for argument parsing
-    local _OPTS=$(getopt -o r:n:d:u:s:pc:h --long rpc:,network:,daemon:,daemon_dir:,userdir:,user:,service:,healthcheck,healthcheck_url:,help \
+    local _OPTS=$(getopt -o r:b:n:d:u:s:pc:h --long rpc:,backup-rpc:,rpc-port:,network:,daemon:,daemon_dir:,userdir:,user:,service:,healthcheck,healthcheck_url:,help \
             -n 'Crypto Chemistry Snapshot State-Sync' -- "$@")
     [[ $? != 0 ]] && { echo "Terminating..." >&2; exit 51; }
     eval set -- "${_OPTS}"
@@ -37,6 +39,8 @@ parse_args() {
     while true; do
     case "$1" in
         -r | --rpc ) RPC="${2%/}"; shift 2 ;;
+        -b | --backup-rpc ) RPC_BACKUP="${2%/}"; shift 2 ;;
+        --rpc-port ) RPC_PORT="$2"; shift 2 ;;
         -n | --network ) NETWORK="$2"; shift 2 ;;
         -d | --daemon ) DAEMON="$2"; shift 2 ;;
         --daemon_dir ) DAEMON_DIR="$2"; shift 2 ;;
@@ -70,12 +74,15 @@ parse_args() {
     if [[ -z $DAEMON_DIR ]]; then
         DAEMON_DIR=$NETWORK
     fi
+    if [[ -z $RPC_PORT ]]; then
+        RPC_PORT=26657
+    fi
 }
 
 configure_state_sync() {
     #Stop daemon service
     systemctl stop ${SERVICE}
-    
+
     #Reset data
     printf "\n==> %s\n" "Resetting ${NETWORK} chain data"
     ${DAEMON} tendermint unsafe-reset-all --home ${USER_DIR}/.${DAEMON_DIR} --keep-addr-book > /dev/null || \
@@ -106,12 +113,47 @@ sync_server() {
         counter=$((counter + 1))
         sleep 30
     done
-    printf "\n==> %s\n" "State Sync is complete"
+    printf "\n==> %s\n" "State Sync attempt is complete"
+}
+
+get_block_height() {
+    # Service must be running to get block height:
+    RPC_PORT=26657
+    BLOCK_HEIGHT=$(curl -s http://localhost:${RPC_PORT}/status | jq -r .result.sync_info.latest_block_height)
+    echo $(curl http://localhost:${RPC_PORT}/status | jq -r .result.sync_info.latest_block_height)
+    counter=1
+    while [[ -z $BLOCK_HEIGHT && $counter -lt 30 ]]; do
+        BLOCK_HEIGHT=$(curl -s http://localhost:${RPC_PORT}/status | jq -r .result.sync_info.latest_block_height)
+        echo $(curl http://localhost:${RPC_PORT}/status | jq -r .result.sync_info.latest_block_height)
+        printf "\n==> %s\n" "Unable to get block height. Attempts: ${counter}/30"
+        counter=$((counter + 1))
+        sleep 15
+    done
+    # Stop the service here to avoid potential corruption:
+    systemctl stop "${SERVICE}"
+    
+    #Set state sync retry if block height could not be found
+    if [[ $counter -gt 29 ]]; then
+        ss_retry='True'
+    fi
 }
 
 disable_state_sync() {
     printf "\n==> %s\n" "Disabling State-Sync in ${USER_DIR}/.${DAEMON_DIR}/config/config.toml"
     sed -i.bak -E "s|^(enable[[:space:]]+=[[:space:]]+).*$|\1false|" ${USER_DIR}/.${DAEMON_DIR}/config/config.toml
+}
+
+start_snapshot() {
+    printf "\n==> %s\n" "Attempting to start snapshot.service"
+    systemctl start snapshot.service
+    counter=1
+    sleep 10
+    while [[ $(systemctl is-active snapshot.service) == "active" && $counter -lt 81 ]]; do
+            printf "\n==> %s\n" "Snapshot Service is active. Attempts: ${counter}/80"
+            counter=$((counter + 1))
+            sleep 30
+    done
+    printf "\n==> %s\n" "Snapshot completed"
 }
 
 healthcheck() {
@@ -127,6 +169,20 @@ make_opts
 parse_args "${@}"
 configure_state_sync
 sync_server
+get_block_height
+if [[ $ss_retry == "True" && ! -z $RPC_BACKUP ]]; then
+    printf "\n==> %s\n" "State Sync failed. Switching to backup RPC node"
+    ss_retry="False"
+    RPC=$RPC_BACKUP
+    configure_state_sync
+    sync_server
+    get_block_height
+    if [[ $ss_retry == "True" ]]; then
+        printf "\n==> %s\n" "State Sync failed. Investigate ${SERVICE} logs"
+        exit 53
+    fi
+fi
 disable_state_sync
+start_snapshot
 healthcheck
 exit "${?}"
